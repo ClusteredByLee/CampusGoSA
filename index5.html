@@ -1,0 +1,1772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Campus Go - Safe, Affordable Rides for Students</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #059669;
+            --accent: #3b82f6;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --gray: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: white;
+            box-shadow: var(--box-shadow);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo span {
+            color: var(--secondary);
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            transition: var(--transition);
+            padding: 0.5rem 0;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary);
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .auth-controls {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .auth-controls .user-pill {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1e40af;
+            padding: .35rem .6rem;
+            border-radius: 999px;
+            font-size: .95rem;
+        }
+
+        .auth-controls .btn {
+            padding: .5rem .9rem;
+            font-size: .95rem;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--primary);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 10rem 0 6rem;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50%;
+            height: 100%;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><rect width="400" height="400" fill="none"/><path d="M50,50 L350,50 L350,350 L50,350 Z" stroke="%232563eb" stroke-width="2" fill="none"/><circle cx="150" cy="150" r="30" fill="%23059669"/><circle cx="250" cy="250" r="25" fill="%233b82f6"/><path d="M100,200 L300,200" stroke="%232563eb" stroke-width="3"/><path d="M200,100 L200,300" stroke="%232563eb" stroke-width="3"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0.1;
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 600px;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .hero h1 span {
+            color: var(--primary);
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--gray);
+            margin-bottom: 2rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            text-decoration: none;
+            transition: var(--transition);
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: var(--box-shadow);
+        }
+
+        .btn-secondary {
+            background-color: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--box-shadow);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--dark);
+            color: var(--dark);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--dark);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--box-shadow);
+        }
+
+        /* Section Styles */
+        section {
+            padding: 5rem 0;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-title h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 1rem;
+        }
+
+        .section-title p {
+            color: var(--gray);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Features Section */
+        .features {
+            background-color: white;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+            border: 1px solid #e2e8f0;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(37, 99, 235, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .feature-card p {
+            color: var(--gray);
+        }
+
+        /* How It Works Section */
+        .how-it-works {
+            background-color: #f1f5f9;
+        }
+
+        .steps {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .step {
+            flex: 1;
+            min-width: 250px;
+            max-width: 350px;
+            text-align: center;
+            padding: 2rem;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            position: relative;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin: 0 auto 1.5rem;
+        }
+
+        .step h3 {
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .step-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin: 1rem 0;
+        }
+
+        /* Map Section */
+        .map-section {
+            background-color: white;
+        }
+
+        #campus-map {
+            height: 450px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin: 1rem 0 0;
+        }
+
+        .map-legend {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        /* Ride panel */
+        .ride-panel {
+            background: white;
+            border-radius: var(--border-radius);
+            border: 1px solid #e2e8f0;
+            box-shadow: var(--box-shadow);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .ride-panel h3 {
+            margin-bottom: .75rem;
+        }
+        .form-row {
+            display: flex;
+            gap: .5rem;
+            flex-wrap: wrap;
+        }
+        .form-row input, .form-row select {
+            flex: 1 1 220px;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        .form-row input:focus, .form-row select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        .ride-status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: .75rem;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: .75rem;
+            border-radius: var(--border-radius);
+            margin-top: .75rem;
+        }
+        .ride-status strong {
+            color: #0f172a;
+        }
+
+        .car-marker {
+            font-size: 28px;
+            filter: drop-shadow(0 1px 1px rgba(0,0,0,.3));
+        }
+        .pickup-marker {
+            font-size: 28px;
+            animation: bounce 1.2s infinite;
+            filter: drop-shadow(0 1px 1px rgba(0,0,0,.3));
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        /* Safety Section */
+        .safety {
+            background-color: #f1f5f9;
+        }
+
+        .safety-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .safety-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .safety-icon {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(5, 150, 105, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--secondary);
+            font-size: 1.2rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .safety-content h3 {
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .safety-content p {
+            color: var(--gray);
+        }
+
+        /* Pricing Section */
+        .pricing {
+            background-color: white;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .pricing-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--box-shadow);
+            border: 2px solid #e2e8f0;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .pricing-card.popular {
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .pricing-card.popular::before {
+            content: 'Most Popular';
+            display: block;
+            background-color: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-bottom: 1rem;
+            width: fit-content;
+            margin: -1rem auto 1rem;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .pricing-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 1rem 0;
+        }
+
+        .price span {
+            font-size: 1rem;
+            color: var(--gray);
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin: 1.5rem 0;
+            text-align: left;
+        }
+
+        .pricing-features li {
+            padding: 0.5rem 0;
+            color: var(--gray);
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .pricing-features li:last-child {
+            border-bottom: none;
+        }
+
+        /* Testimonials Section */
+        .testimonials {
+            background-color: #f1f5f9;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .testimonial-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--box-shadow);
+            position: relative;
+        }
+
+        .testimonial-card::before {
+            content: '"';
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 5rem;
+            color: rgba(37, 99, 235, 0.1);
+            font-family: Georgia, serif;
+            line-height: 1;
+        }
+
+        .testimonial-content {
+            margin-bottom: 1.5rem;
+            font-style: italic;
+            color: var(--dark);
+            position: relative;
+            z-index: 1;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .author-info h4 {
+            color: var(--dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .author-info p {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            text-align: center;
+            padding: 5rem 0;
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta-section p {
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .cta-buttons .btn {
+            min-width: 180px;
+        }
+
+        .btn-white {
+            background-color: white;
+            color: var(--primary);
+        }
+
+        .btn-white:hover {
+            background-color: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+            box-shadow: var(--box-shadow);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid white;
+            color: white;
+        }
+
+        .btn-outline:hover {
+            background-color: white;
+            color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--box-shadow);
+        }
+
+        /* Contact Section */
+        .contact {
+            background-color: white;
+        }
+
+        .contact-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 3rem;
+        }
+
+        .contact-info h3 {
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+        }
+
+        .contact-info p {
+            color: var(--gray);
+            margin-bottom: 1rem;
+        }
+
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 3rem 0 1.5rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-column h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: white;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .social-link:hover {
+            background-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        /* Auth Modal */
+        #authModal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 1rem;
+        }
+        #authModal.open { display: flex; }
+        .auth-card {
+            background: white;
+            width: 100%;
+            max-width: 480px;
+            border-radius: 16px;
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        .auth-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+        .auth-tabs {
+            display: flex;
+            gap: .5rem;
+        }
+        .auth-tab {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: .4rem .8rem;
+            border-radius: 999px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #334155;
+        }
+        .auth-tab.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        .auth-body {
+            padding: 1rem 1.25rem 1.25rem;
+        }
+        .auth-body form {
+            display: none;
+            display: none;
+        }
+        .auth-body form.active { display: grid; gap: .8rem; }
+        .auth-body .form-group { display: grid; gap: .4rem; }
+        .auth-body input {
+            padding: .75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background-color: white;
+                flex-direction: column;
+                padding: 1rem 0;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                z-index: 100;
+            }
+
+            .nav-links.active { display: flex; }
+            .mobile-menu-btn { display: block; }
+            .hero h1 { font-size: 2.5rem; }
+            .hero { padding: 8rem 0 4rem; }
+            .section-title h2 { font-size: 2rem; }
+            .steps { flex-direction: column; }
+            .pricing-card.popular { transform: scale(1); }
+            .pricing-card.popular::before { position: static; margin: 0 auto 1rem; }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 { font-size: 2rem; }
+            .cta-buttons { flex-direction: column; }
+            .btn { width: 100%; text-align: center; }
+        }
+
+        /* Animation */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate { animation: fadeInUp 0.6s ease forwards; }
+
+        .icon { display: inline-block; font-weight: bold; text-align: center; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <a href="#home" class="logo">Campus<span>Go</span></a>
+                <ul class="nav-links">
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#how-it-works">How It Works</a></li>
+                    <li><a href="#safety">Safety</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+
+                <div class="auth-controls">
+                    <button id="openAuth" class="btn btn-secondary">Sign In</button>
+                    <div id="userMenu" class="user-pill" style="display:none;">
+                        <span id="userName">Student</span>
+                        <button id="logoutBtn" class="btn btn-secondary" style="padding:.25rem .6rem; font-size:.85rem;">Logout</button>
+                    </div>
+                    <button class="mobile-menu-btn">☰</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Safe, <span>Affordable</span>, Trusted Rides for Students</h1>
+                <p>Your campus, your ride.</p>
+                <div class="cta-buttons">
+                    <a href="#" class="btn btn-primary">Download App</a>
+                    <a href="#features" class="btn btn-secondary">Learn More</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-title">
+                <h2>Why Campus Go?</h2>
+                <p>Designed exclusively for university students, our service offers unmatched convenience, safety, and affordability.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">✓</div>
+                    <h3>Verified Campus Fleet</h3>
+                    <p>Only university-branded cars with approved drivers. No random vehicles on our platform.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💲</div>
+                    <h3>Smart Pricing</h3>
+                    <p>No surge pricing. Always affordable rates designed specifically for student budgets.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <h3>Ride Options</h3>
+                    <p>Choose between Solo, Carpool, or Shuttle rides based on your needs and budget.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Safety Features</h3>
+                    <p>Panic button, live GPS tracking, and mandatory ID verification for all users.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💳</div>
+                    <h3>Payment Options</h3>
+                    <p>Pay with card, campus wallet, or directly from your student ID balance.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌱</div>
+                    <h3>Eco-Friendly</h3>
+                    <p>Future-ready with electric vehicles to reduce campus carbon footprint.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-title">
+                <h2>How It Works</h2>
+                <p>Getting a ride on Campus Go is as easy as 1-2-3</p>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-icon">📱</div>
+                    <h3>Download & Sign In</h3>
+                    <p>Download the Campus Go app and sign in using your university student ID for instant verification.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-icon">🚗</div>
+                    <h3>Choose Your Ride</h3>
+                    <p>Select from Solo, Carpool, or Shuttle options based on your destination and budget.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-icon">📍</div>
+                    <h3>Track & Arrive</h3>
+                    <p>Track your ride in real-time, share your location with friends, and arrive at your destination safely.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section -->
+    <section class="map-section" id="map">
+        <div class="container">
+            <div class="section-title">
+                <h2>Campus Coverage</h2>
+                <p>See our service areas and designated pick-up/drop-off zones</p>
+            </div>
+
+            <!-- Ride panel -->
+            <div id="ride-panel" class="ride-panel">
+                <h3>Request a Ride</h3>
+                <div class="form-row">
+                    <input id="pickupAddress" type="text" placeholder="Enter your pickup address (e.g., 123 University Ave)" />
+                    <select id="rideType">
+                        <option value="solo">Solo</option>
+                        <option value="carpool" selected>Carpool</option>
+                        <option value="shuttle">Shuttle</option>
+                    </select>
+                    <button id="requestRideBtn" class="btn btn-primary">Request Ride</button>
+                    <button id="cancelRideBtn" class="btn btn-outline" style="display:none;">Cancel</button>
+                </div>
+                <div id="ride-status" class="ride-status" style="display:none;">
+                    <div><strong>Status:</strong> <span id="statusText">Searching for driver…</span></div>
+                    <div><strong>Driver:</strong> <span id="driverName">—</span></div>
+                    <div><strong>ETA:</strong> <span id="eta">—</span></div>
+                </div>
+            </div>
+
+            <div id="campus-map"></div>
+
+            <div class="map-legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #2563eb;"></div>
+                    <span>Pick-up Points</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #059669;"></div>
+                    <span>Drop-off Zones</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Safety Section -->
+    <section class="safety" id="safety">
+        <div class="container">
+            <div class="section-title">
+                <h2>Safety & Trust</h2>
+                <p>Your safety is our top priority. We've built multiple layers of protection into every ride.</p>
+            </div>
+            <div class="safety-grid">
+                <div class="safety-item">
+                    <div class="safety-icon">🎓</div>
+                    <div class="safety-content">
+                        <h3>University-Approved Drivers</h3>
+                        <p>All drivers undergo background checks and are approved by university administration.</p>
+                    </div>
+                </div>
+                <div class="safety-item">
+                    <div class="safety-icon">🚘</div>
+                    <div class="safety-content">
+                        <h3>Branded Vehicles</h3>
+                        <p>Every vehicle displays official university branding, making them easily identifiable.</p>
+                    </div>
+                </div>
+                <div class="safety-item">
+                    <div class="safety-icon">🚨</div>
+                    <div class="safety-content">
+                        <h3>Emergency Panic Button</h3>
+                        <p>One-tap emergency button connects you directly to campus security and shares your live location.</p>
+                    </div>
+                </div>
+                <div class="safety-item">
+                    <div class="safety-icon">👁️</div>
+                    <div class="safety-content">
+                        <h3>Live Location Sharing</h3>
+                        <p>Share your ride details and live location with friends or family for added peace of mind.</p>
+                    </div>
+                </div>
+                <div class="safety-item">
+                    <div class="safety-icon">⭐</div>
+                    <div class="safety-content">
+                        <h3>Ride Reviews (Admin Only)</h3>
+                        <p>All reviews are monitored by university admin to ensure quality and address any concerns immediately.</p>
+                    </div>
+                </div>
+                <div class="safety-item">
+                    <div class="safety-icon">🔒</div>
+                    <div class="safety-content">
+                        <h3>ID Verification</h3>
+                        <p>Mandatory student ID verification for both riders and drivers ensures a trusted campus community.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <div class="section-title">
+                <h2>Simple, Student-Friendly Pricing</h2>
+                <p>Designed to fit your budget with no hidden fees or surge pricing</p>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>Solo Ride</h3>
+                    <div class="price">$2 <span>per trip</span></div>
+                    <ul class="pricing-features">
+                        <li>Direct route to destination</li>
+                        <li>Up to 3 miles on campus</li>
+                        <li>Priority pickup</li>
+                        <li>24/7 availability</li>
+                    </ul>
+                    <a href="#" class="btn btn-primary">Choose Plan</a>
+                </div>
+                <div class="pricing-card popular">
+                    <h3>Carpool</h3>
+                    <div class="price">$1 <span>per trip</span></div>
+                    <ul class="pricing-features">
+                        <li>Share rides with classmates</li>
+                        <li>Route optimization</li>
+                        <li>Make new friends</li>
+                        <li>Most eco-friendly option</li>
+                    </ul>
+                    <a href="#" class="btn btn-primary">Choose Plan</a>
+                </div>
+                <div class="pricing-card">
+                    <h3>Shuttle</h3>
+                    <div class="price">$5 <span>per event</span></div>
+                    <ul class="pricing-features">
+                        <li>For campus events & games</li>
+                        <li>Fixed routes & schedules</li>
+                        <li>Group transportation</li>
+                        <li>Special event pricing</li>
+                    </ul>
+                    <a href="#" class="btn btn-primary">Choose Plan</a>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 3rem;">
+                <h3>Semester Pass</h3>
+                <p style="margin: 1rem 0; font-size: 1.2rem;">Get unlimited rides for the entire semester at just $49.99</p>
+                <a href="#" class="btn btn-secondary">Get Semester Pass</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials">
+        <div class="container">
+            <div class="section-title">
+                <h2>What Students Are Saying</h2>
+                <p>Real feedback from students who've made Campus Go part of their daily routine</p>
+            </div>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        Campus Go has completely changed how I get around campus. I feel safe knowing I'm riding with verified drivers in university-branded cars.
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">SJ</div>
+                        <div class="author-info">
+                            <h4>Sarah Johnson</h4>
+                            <p>Junior, Computer Science</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        The carpool option has saved me so much money this semester! I've also met some great people while sharing rides to class.
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">MR</div>
+                        <div class="author-info">
+                            <h4>Michael Rodriguez</h4>
+                            <p>Sophomore, Business</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        Late-night study sessions used to be stressful because of transportation. Now I can focus on my work knowing I have a safe, affordable ride home.
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">TC</div>
+                        <div class="author-info">
+                            <h4>Taylor Chen</h4>
+                            <p>Senior, Engineering</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Bring Campus Go to Your University Today!</h2>
+            <p>Partner with us to provide safe, affordable transportation for your students while reducing campus traffic and carbon emissions.</p>
+            <div class="cta-buttons">
+                <a href="#contact" class="btn btn-white">Partner with Us</a>
+                <a href="#" class="btn btn-outline">Request a Demo</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <div class="section-title">
+                <h2>Get in Touch</h2>
+                <p>Interested in bringing Campus Go to your university? Send us a message.</p>
+            </div>
+            <div class="contact-container">
+                <div class="contact-info">
+                    <h3>Contact Information</h3>
+                    <p><strong>Email:</strong> info@campusgo.com</p>
+                    <p><strong>Phone:</strong> (555) 123-4567</p>
+                    <p><strong>Address:</strong> 123 University Ave, Campus Town, ST 12345</p>
+                    <p>Our team will respond to all inquiries within 24 hours.</p>
+                </div>
+                <div class="contact-form">
+                    <form id="contactForm">
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input type="text" id="name" name="name" required placeholder="Your full name">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" required placeholder="your.email@university.edu">
+                        </div>
+                        <div class="form-group">
+                            <label for="message">Message</label>
+                            <textarea id="message" name="message" required placeholder="Tell us about your university and transportation needs..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>CampusGo</h3>
+                    <p>Safe, affordable, trusted rides for university students.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link">f</a>
+                        <a href="#" class="social-link">t</a>
+                        <a href="#" class="social-link">in</a>
+                        <a href="#" class="social-link">ig</a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#safety">Safety</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Legal</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Cookie Policy</a></li>
+                        <li><a href="#">Driver Agreement</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Support</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Contact Support</a></li>
+                        <li><a href="#">Safety Tips</a></li>
+                        <li><a href="#">Campus Partners</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 CampusGo. All rights reserved. Designed for universities, by students.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Auth Modal -->
+    <div id="authModal">
+        <div class="auth-card">
+            <div class="auth-header">
+                <strong>Welcome to CampusGo</strong>
+                <div class="auth-tabs">
+                    <button id="tabLogin" class="auth-tab active">Login</button>
+                    <button id="tabSignup" class="auth-tab">Sign Up</button>
+                </div>
+            </div>
+            <div class="auth-body">
+                <form id="loginForm" class="active">
+                    <div class="form-group">
+                        <label for="loginEmail">Email</label>
+                        <input id="loginEmail" type="email" placeholder="your.email@university.edu" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input id="loginPassword" type="password" placeholder="••••••••" required />
+                    </div>
+                    <button class="btn btn-primary" type="submit">Login</button>
+                </form>
+
+                <form id="signupForm">
+                    <div class="form-group">
+                        <label for="signupName">Full Name</label>
+                        <input id="signupName" type="text" placeholder="Jane Doe" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="signupEmail">Email</label>
+                        <input id="signupEmail" type="email" placeholder="your.email@university.edu" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPassword">Password</label>
+                        <input id="signupPassword" type="password" minlength="6" placeholder="At least 6 characters" required />
+                    </div>
+                    <button class="btn btn-primary" type="submit">Create Account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ---------- Utilities ----------
+        const SPEED_MULTIPLIER = 3; // Speed up the simulation (3x faster than real ETA)
+        const driverNames = ["Alex", "Jordan", "Casey", "Taylor", "Sam", "Riley", "Morgan", "Jamie", "Avery"];
+        const emailForNominatim = "your-email@example.com"; // replace with your contact email per Nominatim policy
+
+        const state = {
+            map: null,
+            pickupPoints: [],
+            dropoffZones: [],
+            campusBoundary: null,
+            pickupMarker: null,
+            driverMarker: null,
+            routeLine: null,
+            driverName: null,
+            etaSeconds: null,
+            animInterval: null,
+            routeCoords: [],
+            secsPerStep: 0,
+            stepIndex: 0
+        };
+
+        // ---------- Auth (demo only; localStorage) ----------
+        const ls = {
+            getUsers: () => JSON.parse(localStorage.getItem("campusgo_users") || "[]"),
+            setUsers: (users) => localStorage.setItem("campusgo_users", JSON.stringify(users)),
+            getSession: () => JSON.parse(localStorage.getItem("campusgo_session") || "null"),
+            setSession: (session) => localStorage.setItem("campusgo_session", JSON.stringify(session)),
+            clearSession: () => localStorage.removeItem("campusgo_session")
+        };
+
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        function updateAuthUI() {
+            const session = ls.getSession();
+            const openAuth = document.getElementById("openAuth");
+            const userMenu = document.getElementById("userMenu");
+            const userName = document.getElementById("userName");
+            if (session) {
+                openAuth.style.display = "none";
+                userMenu.style.display = "flex";
+                userName.textContent = session.name;
+            } else {
+                openAuth.style.display = "inline-flex";
+                userMenu.style.display = "none";
+            }
+        }
+
+        function openAuthModal(which = "login") {
+            const modal = document.getElementById("authModal");
+            const tabLogin = document.getElementById("tabLogin");
+            const tabSignup = document.getElementById("tabSignup");
+            const loginForm = document.getElementById("loginForm");
+            const signupForm = document.getElementById("signupForm");
+
+            if (which === "login") {
+                tabLogin.classList.add("active");
+                tabSignup.classList.remove("active");
+                loginForm.classList.add("active");
+                signupForm.classList.remove("active");
+            } else {
+                tabSignup.classList.add("active");
+                tabLogin.classList.remove("active");
+                signupForm.classList.add("active");
+                loginForm.classList.remove("active");
+            }
+
+            modal.classList.add("open");
+        }
+
+        function closeAuthModal() {
+            document.getElementById("authModal").classList.remove("open");
+        }
+
+        // ---------- Map & Data ----------
+        function initMap() {
+            // Create map centered on a sample campus (NYC-ish as placeholder)
+            state.map = L.map('campus-map').setView([40.7128, -74.0060], 15);
+
+            // OSM tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(state.map);
+
+            // Sample campus locations (adjust as needed)
+            state.pickupPoints = [
+                {name: "Main Library", lat: 40.7138, lng: -74.0050},
+                {name: "Student Union", lat: 40.7120, lng: -74.0070},
+                {name: "Dormitory A", lat: 40.7145, lng: -74.0085},
+                {name: "Science Building", lat: 40.7115, lng: -74.0045}
+            ];
+            state.dropoffZones = [
+                {name: "Athletic Center", lat: 40.7105, lng: -74.0090},
+                {name: "Campus Dining Hall", lat: 40.7130, lng: -74.0065},
+                {name: "Arts Complex", lat: 40.7150, lng: -74.0035},
+                {name: "Parking Structure", lat: 40.7095, lng: -74.0055}
+            ];
+
+            // Add markers
+            state.pickupPoints.forEach(point => {
+                L.marker([point.lat, point.lng], {
+                    icon: L.divIcon({
+                        className: 'custom-marker',
+                        html: '<div style="background-color: #2563eb; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>',
+                        iconSize: [16, 16],
+                        iconAnchor: [8, 8]
+                    })
+                }).addTo(state.map).bindPopup(`<b>${point.name}</b><br>Pick-up Point`);
+            });
+            state.dropoffZones.forEach(zone => {
+                L.marker([zone.lat, zone.lng], {
+                    icon: L.divIcon({
+                        className: 'custom-marker',
+                        html: '<div style="background-color: #059669; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>',
+                        iconSize: [16, 16],
+                        iconAnchor: [8, 8]
+                    })
+                }).addTo(state.map).bindPopup(`<b>${zone.name}</b><br>Drop-off Zone`);
+            });
+
+            // Campus boundary (optional)
+            const campusBoundary = [
+                [40.7090, -74.0100],
+                [40.7090, -74.0020],
+                [40.7160, -74.0020],
+                [40.7160, -74.0100]
+            ];
+            L.polygon(campusBoundary, {
+                color: '#2563eb',
+                weight: 2,
+                fillOpacity: 0.1
+            }).addTo(state.map).bindPopup("Sample Campus Boundary");
+        }
+
+        // Geocode address to lat/lng (Nominatim)
+        async function geocodeAddress(query) {
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&email=${encodeURIComponent(emailForNominatim)}`;
+            const res = await fetch(url, { headers: { 'Accept': 'application/json' }});
+            if (!res.ok) throw new Error('Geocoding failed');
+            const data = await res.json();
+            if (!data || !data.length) throw new Error('Address not found');
+            const hit = data[0];
+            return {
+                lat: parseFloat(hit.lat),
+                lng: parseFloat(hit.lon),
+                display: hit.display_name
+            };
+        }
+
+        // Get route between [lng,lat] coords via OSRM
+        async function fetchRoute(startLngLat, endLngLat) {
+            const url = `https://router.project-osrm.org/route/v1/driving/${startLngLat.join(',')};${endLngLat.join(',')}?overview=full&geometries=geojson`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('Routing failed');
+            const data = await res.json();
+            if (!data.routes || !data.routes.length) throw new Error('No route found');
+            const route = data.routes[0];
+            const coords = route.geometry.coordinates.map(([lng, lat]) => [lat, lng]); // to [lat, lng]
+            return { coords, duration: route.duration, distance: route.distance };
+        }
+
+        function pickRandomDriverStart() {
+            // Random existing pickup point to start from
+            const p = state.pickupPoints[Math.floor(Math.random() * state.pickupPoints.length)];
+            return [p.lat, p.lng];
+        }
+
+        function fitMapToRide() {
+            const layers = [];
+            if (state.pickupMarker) layers.push(state.pickupMarker);
+            if (state.driverMarker) layers.push(state.driverMarker);
+            if (state.routeLine) layers.push(state.routeLine);
+            if (layers.length) {
+                const group = L.featureGroup(layers);
+                state.map.fitBounds(group.getBounds().pad(0.25));
+            }
+        }
+
+        function clearRide() {
+            if (state.animInterval) { clearInterval(state.animInterval); state.animInterval = null; }
+            if (state.routeLine) { state.map.removeLayer(state.routeLine); state.routeLine = null; }
+            if (state.driverMarker) { state.map.removeLayer(state.driverMarker); state.driverMarker = null; }
+            if (state.pickupMarker) { state.map.removeLayer(state.pickupMarker); state.pickupMarker = null; }
+            state.routeCoords = [];
+            state.secsPerStep = 0;
+            state.stepIndex = 0;
+            state.driverName = null;
+            state.etaSeconds = null;
+
+            document.getElementById('ride-status').style.display = 'none';
+            document.getElementById('cancelRideBtn').style.display = 'none';
+            const requestBtn = document.getElementById('requestRideBtn');
+            requestBtn.disabled = false;
+            requestBtn.textContent = 'Request Ride';
+        }
+
+        function formatETA(seconds) {
+            seconds = Math.max(0, Math.round(seconds));
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return m > 0 ? `${m}m ${s}s` : `${s}s`;
+        }
+
+        function startDriverAnimation() {
+            const driverMarker = state.driverMarker;
+            const coords = state.routeCoords;
+            if (!driverMarker || !coords.length) return;
+
+            const etaEl = document.getElementById('eta');
+            const statusEl = document.getElementById('statusText');
+
+            // Derive per step timing (sped up)
+            state.secsPerStep = Math.max(0.05, state.secsPerStep / SPEED_MULTIPLIER);
+            const stepMs = state.secsPerStep * 1000;
+
+            // Move car along polyline
+            state.animInterval = setInterval(() => {
+                if (state.stepIndex >= coords.length) {
+                    clearInterval(state.animInterval);
+                    state.animInterval = null;
+                    etaEl.textContent = '0s';
+                    statusEl.textContent = 'Driver arrived';
+                    return;
+                }
+                const [lat, lng] = coords[state.stepIndex];
+                driverMarker.setLatLng([lat, lng]);
+
+                // Update ETA
+                const stepsLeft = coords.length - state.stepIndex;
+                const eta = stepsLeft * state.secsPerStep;
+                etaEl.textContent = formatETA(eta);
+
+                state.stepIndex += 1;
+            }, stepMs);
+        }
+
+        async function requestRideFlow() {
+            const session = ls.getSession();
+            if (!session) {
+                openAuthModal('login');
+                return;
+            }
+
+            const address = document.getElementById('pickupAddress').value.trim();
+            const rideType = document.getElementById('rideType').value;
+            const requestBtn = document.getElementById('requestRideBtn');
+            const cancelBtn = document.getElementById('cancelRideBtn');
+            const statusWrap = document.getElementById('ride-status');
+            const statusEl = document.getElementById('statusText');
+            const driverEl = document.getElementById('driverName');
+            const etaEl = document.getElementById('eta');
+
+            if (!address) {
+                alert('Please enter a pickup address.');
+                return;
+            }
+
+            // Reset previous ride if any
+            clearRide();
+
+            requestBtn.disabled = true;
+            requestBtn.textContent = 'Requesting…';
+            statusWrap.style.display = 'grid';
+            statusEl.textContent = 'Finding the best driver…';
+            driverEl.textContent = '—';
+            etaEl.textContent = '—';
+
+            try {
+                // 1) Geocode pickup
+                const pickup = await geocodeAddress(address);
+
+                // Pickup marker
+                state.pickupMarker = L.marker([pickup.lat, pickup.lng], {
+                    icon: L.divIcon({ className: 'pickup-marker', html: '📍', iconSize: [28, 28], iconAnchor: [14, 28] })
+                }).addTo(state.map).bindPopup(`<b>Pickup</b><div style="max-width:240px; font-size:.95rem;">${pickup.display}</div>`).openPopup();
+
+                // 2) Assign driver
+                const driverStart = pickRandomDriverStart(); // [lat, lng]
+                const driverName = driverNames[Math.floor(Math.random() * driverNames.length)];
+                state.driverName = driverName;
+                driverEl.textContent = `${driverName} (${rideType})`;
+
+                state.driverMarker = L.marker(driverStart, {
+                    icon: L.divIcon({ className: 'car-marker', html: '🚗', iconSize: [28, 28], iconAnchor: [14, 14] })
+                }).addTo(state.map).bindPopup(`<b>${driverName}</b><div>Assigned driver</div>`);
+
+                // 3) Route to pickup (OSRM expects [lng,lat])
+                const route = await fetchRoute([driverStart[1], driverStart[0]], [pickup.lng, pickup.lat]);
+                state.routeCoords = route.coords;
+                state.secsPerStep = route.duration / route.coords.length;
+
+                if (state.routeLine) state.map.removeLayer(state.routeLine);
+                state.routeLine = L.polyline(state.routeCoords, { color: '#3b82f6', weight: 5, opacity: 0.8 }).addTo(state.map);
+
+                fitMapToRide();
+
+                // 4) Start moving the driver
+                statusEl.textContent = 'Driver en route';
+                document.getElementById('cancelRideBtn').style.display = 'inline-flex';
+                requestBtn.textContent = 'Ride Requested';
+                startDriverAnimation();
+
+            } catch (err) {
+                console.error(err);
+                alert('Sorry, we could not process your request. Try another address.');
+                clearRide();
+            } finally {
+                requestBtn.disabled = false;
+            }
+        }
+
+        // ---------- Page behavior ----------
+        document.addEventListener('DOMContentLoaded', () => {
+            // Mobile menu
+            document.querySelector('.mobile-menu-btn').addEventListener('click', () => {
+                document.querySelector('.nav-links').classList.toggle('active');
+            });
+
+            // Smooth scroll (ignore plain "#" links)
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    const target = this.getAttribute('href');
+                    if (target && target.length > 1) {
+                        e.preventDefault();
+                        const el = document.querySelector(target);
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
+                        document.querySelector('.nav-links').classList.remove('active');
+                    }
+                });
+            });
+
+            // Init map and markers
+            initMap();
+
+            // Contact form
+            document.getElementById('contactForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                alert('Thank you for your message! We will contact you soon.');
+                this.reset();
+            });
+
+            // Intersection animations
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) entry.target.classList.add('animate');
+                });
+            }, { threshold: 0.1 });
+            document.querySelectorAll('section').forEach(section => observer.observe(section));
+
+            // Auth events
+            document.getElementById("openAuth").addEventListener("click", () => openAuthModal('login'));
+            document.getElementById("logoutBtn").addEventListener("click", () => { ls.clearSession(); updateAuthUI(); });
+
+            document.getElementById("authModal").addEventListener("click", (e) => {
+                if (e.target.id === "authModal") closeAuthModal(); // click backdrop to close
+            });
+
+            document.getElementById("tabLogin").addEventListener("click", () => openAuthModal('login'));
+            document.getElementById("tabSignup").addEventListener("click", () => openAuthModal('signup'));
+
+            document.getElementById("loginForm").addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+                const password = document.getElementById('loginPassword').value;
+                const users = ls.getUsers();
+                const user = users.find(u => u.email === email);
+                if (!user) return alert('No account found. Please sign up.');
+                const hash = await sha256(password);
+                if (hash !== user.passHash) return alert('Invalid password.');
+                ls.setSession({ name: user.name, email: user.email });
+                updateAuthUI();
+                closeAuthModal();
+                alert('Logged in!');
+            });
+
+            document.getElementById("signupForm").addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('signupName').value.trim();
+                const email = document.getElementById('signupEmail').value.trim().toLowerCase();
+                const password = document.getElementById('signupPassword').value;
+                const users = ls.getUsers();
+                if (users.find(u => u.email === email)) return alert('Account already exists. Please login.');
+                const passHash = await sha256(password);
+                users.push({ name, email, passHash, createdAt: Date.now() });
+                ls.setUsers(users);
+                ls.setSession({ name, email });
+                updateAuthUI();
+                closeAuthModal();
+                alert('Account created! You are now logged in.');
+            });
+
+            updateAuthUI();
+
+            // Ride flow
+            document.getElementById('requestRideBtn').addEventListener('click', requestRideFlow);
+            document.getElementById('cancelRideBtn').addEventListener('click', () => {
+                if (confirm('Cancel this ride?')) clearRide();
+            });
+        });
+    </script>
+</body>
+</html>
